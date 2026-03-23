@@ -71,6 +71,7 @@ Internal cache only. Never show the file path to the user.
 ## What to tell the user
 
 - Always share the URL from the current script run.
+- Never bold, italicize, or wrap URLs in markdown formatting (no `**`, `_`, `[]()`, or backticks). Output them as plain text so they are clickable as-is.
 - Read `publish_result.*` lines from stderr to determine auth mode.
 - When `publish_result.auth_mode=authenticated`: tell the user their article is **permanent** and saved to their account.
 - When `publish_result.auth_mode=provisional`: tell the user their article **expires in 24 hours**. Their account was created automatically — offer to make it permanent by verifying their email.
