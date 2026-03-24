@@ -1,0 +1,5 @@
+{
+  "name": "leafmill",
+  "description": "Publish markdown and get a shareable URL with beautifully rendered articles. Supports channels with RSS feeds.",
+  "version": "1.0.0"
+}
