@@ -26,6 +26,14 @@ Single-step flow: the script reads the markdown file, POSTs it as JSON, and gets
 
 On first publish (no API key), the server creates a provisional account and returns an API key. The script auto-saves it to `~/.leafmill/credentials`. Articles expire after 24 hours until the user verifies their email. Subsequent publishes use the saved key automatically.
 
+## Update an existing article
+
+```bash
+./scripts/publish.sh <markdown-file> --update <slug>
+```
+
+Updates the article's body (and optionally title/description). The slug and URL stay the same. Requires authentication.
+
 ## Client attribution
 
 ```bash
@@ -153,6 +161,7 @@ Provisional users have expiring content. To make everything permanent, verify an
 | `--title {text}` | Title (default: filename) |
 | `--description {text}` | Description |
 | `--channel {slug}` | Assign to a channel (requires auth) |
+| `--update {slug}` | Update an existing article (requires auth) |
 | `--client {name}` | Agent attribution (e.g. `cursor`, `claude-code`) |
 | `--api-key {key}` | API key override (prefer credentials file) |
 | `--base-url {url}` | API base (default: `https://leafmill.net`) |
@@ -165,6 +174,7 @@ All endpoints are at `https://leafmill.net`. See `references/REFERENCE.md` for a
 |---|---|---|
 | `POST` | `/api/v1/publish` | Publish markdown (creates provisional user if no auth) |
 | `GET` | `/api/v1/articles/:slug` | Get article metadata |
+| `PATCH` | `/api/v1/articles/:slug` | Update article (owner only) |
 | `DELETE` | `/api/v1/articles/:slug` | Delete article (owner only) |
 | `POST` | `/api/v1/channels` | Create channel |
 | `GET` | `/api/v1/channels/:slug` | Get channel metadata |

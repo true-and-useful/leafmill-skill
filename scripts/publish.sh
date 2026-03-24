@@ -21,6 +21,7 @@ Options:
   --title <text>                   Title (default: filename)
   --description <text>             Description
   --channel <slug>                 Assign to a channel (requires auth)
+  --update <slug>                  Update an existing article (requires auth)
   --client <name>                  Agent attribution (e.g. cursor, claude-code)
   --api-key <key>                  API key override (prefer credentials file)
   --base-url <url>                 API base (default: https://leafmill.net)
@@ -41,6 +42,7 @@ MD_FILE=""
 TITLE=""
 DESCRIPTION=""
 CHANNEL=""
+UPDATE_SLUG=""
 CLIENT=""
 API_KEY=""
 
@@ -49,6 +51,7 @@ while [[ $# -gt 0 ]]; do
     --title)       TITLE="$2"; shift 2 ;;
     --description) DESCRIPTION="$2"; shift 2 ;;
     --channel)     CHANNEL="$2"; shift 2 ;;
+    --update)      UPDATE_SLUG="$2"; shift 2 ;;
     --client)      CLIENT="$2"; shift 2 ;;
     --api-key)     API_KEY="$2"; shift 2 ;;
     --base-url)    LEAFMILL_BASE_URL="$2"; shift 2 ;;
@@ -103,25 +106,45 @@ if [[ -n "$CHANNEL" ]] && [[ -z "$API_KEY" ]]; then
   die "--channel requires authentication (set API key via --api-key, \$LEAFMILL_API_KEY, or ~/.leafmill/credentials)"
 fi
 
+if [[ -n "$UPDATE_SLUG" ]] && [[ -z "$API_KEY" ]]; then
+  die "--update requires authentication (set API key via --api-key, \$LEAFMILL_API_KEY, or ~/.leafmill/credentials)"
+fi
+
 # --- build JSON payload using jq --rawfile for proper escaping --------------
 
-JSON_PAYLOAD="$(jq -n \
-  --arg title "$TITLE" \
-  --rawfile body "$MD_FILE" \
-  --arg description "$DESCRIPTION" \
-  --arg channel "$CHANNEL" \
-  '{title: $title, body: $body} +
-   (if $description != "" then {description: $description} else {} end) +
-   (if $channel != "" then {channel: $channel} else {} end)'
-)"
+if [[ -n "$UPDATE_SLUG" ]]; then
+  # Update: all fields optional, include what's provided
+  JSON_PAYLOAD="$(jq -n \
+    --arg title "$TITLE" \
+    --rawfile body "$MD_FILE" \
+    --arg description "$DESCRIPTION" \
+    '{body: $body} +
+     (if $title != "" then {title: $title} else {} end) +
+     (if $description != "" then {description: $description} else {} end)'
+  )"
+  API_URL="${LEAFMILL_BASE_URL}/api/v1/articles/${UPDATE_SLUG}"
+  HTTP_METHOD="PATCH"
+else
+  JSON_PAYLOAD="$(jq -n \
+    --arg title "$TITLE" \
+    --rawfile body "$MD_FILE" \
+    --arg description "$DESCRIPTION" \
+    --arg channel "$CHANNEL" \
+    '{title: $title, body: $body} +
+     (if $description != "" then {description: $description} else {} end) +
+     (if $channel != "" then {channel: $channel} else {} end)'
+  )"
+  API_URL="${LEAFMILL_BASE_URL}/api/v1/publish"
+  HTTP_METHOD="POST"
+fi
 
 # --- build curl args --------------------------------------------------------
 
 CURL_ARGS=(
   -sS
   --fail-with-body
-  -X POST
-  "${LEAFMILL_BASE_URL}/api/v1/publish"
+  -X "$HTTP_METHOD"
+  "$API_URL"
   -H "Content-Type: application/json"
   -d "$JSON_PAYLOAD"
 )

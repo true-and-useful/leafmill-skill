@@ -124,6 +124,47 @@ GET /api/v1/articles/:slug
 }
 ```
 
+### Update article
+
+```
+PATCH /api/v1/articles/:slug
+Authorization: Bearer <API_KEY>
+Content-Type: application/json
+
+{
+  "title": "Updated Title",
+  "body": "# Updated\n\nNew markdown content.",
+  "description": "Updated summary"
+}
+```
+
+All fields are optional — only provided fields are updated. If `body` is updated and `description` is not provided, the description is auto-generated from the new body.
+
+**Response** (`200`):
+
+```json
+{
+  "slug": "wild-river-9x2k",
+  "url": "https://leafmill.net/wild-river-9x2k",
+  "title": "Updated Title",
+  "description": "Updated summary",
+  "wordCount": 42,
+  "createdAt": "2026-03-19T12:00:00Z",
+  "updatedAt": "2026-03-20T08:00:00Z"
+}
+```
+
+**Errors**:
+
+| Status | Error | When |
+|---|---|---|
+| `400` | `no_fields` | No updatable fields provided |
+| `400` | `invalid_request` | Malformed JSON |
+| `401` | `unauthorized` | Missing or invalid API key |
+| `403` | `forbidden` | Not the article owner |
+| `404` | `not_found` | Article not found or deleted |
+| `413` | `body_too_large` | Body exceeds 500 KB |
+
 ### Delete article
 
 ```
